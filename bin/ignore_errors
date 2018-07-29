@@ -1,0 +1,11 @@
+#!/bin/bash
+
+in="$(mktemp)"
+out="$(mktemp)"
+cat >"$in"
+if <"$in" "$@" >"$out"; then
+    cat "$out"
+else
+    cat "$in"
+fi
+rm -f "$in" "$out"

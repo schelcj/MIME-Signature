@@ -1,3 +1,8 @@
+bin/append-signature
+bin/dump_mail_struct
+bin/ezmlm-append-trailer
+bin/ignore_errors
+bin/testrun
 Changes
 lib/Mail/Signature.pm
 Makefile.PL

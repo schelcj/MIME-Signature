@@ -1,57 +1,413 @@
 package Mail::Signature;
 
-use 5.006;
-use strict;
+use 5.014;
 use warnings;
+
+our $VERSION = '0.01';
+
+use Carp qw(croak);
+use Encode qw(decode encode encode_utf8);
+use MIME::Parser;
+
+sub _decoded_body {
+    my $entity = shift;
+    my $body   = $entity->bodyhandle->as_string;
+    if ( my $charset = $entity->head->mime_attr('content-type.charset') ) {
+        $body = decode $charset, $body;
+    }
+    $body;
+}
+
+sub _replace_body {
+    my ( $entity, $body ) = @_;
+    {
+        my $encoding_ok;
+        if ( my $charset = $entity->head->mime_attr('content-type.charset') ) {
+            $encoding_ok = 1;
+            $body = encode $charset, $body, sub { undef $encoding_ok; '' };
+        }
+        unless ($encoding_ok) {
+            my $head = $entity->head;
+            $head->mime_attr( 'Content-Type', 'text/plain' )
+              unless $head->mime_attr('content-type');
+            $head->mime_attr( 'content-type.charset' => 'UTF-8' );
+            $body = encode_utf8($body);
+        }
+    }
+    my $fh = $entity->bodyhandle->open('w') or die "Open body: $!\n";
+    $fh->print($body);
+    $fh->close or die "Cannot replace body: $!\n";
+}
+
+sub enriched {
+    my $self = shift;
+    if (@_) {
+        $self->{enriched} = shift;
+    }
+    elsif ( defined wantarray ) {
+        if ( !defined $self->{enriched} && defined( my $plain = $self->plain ) )
+        {
+            $self->{enriched} = $plain =~ s/</<</gr =~ s/(\n+)/$1\n/gr;
+        }
+        $self->{enriched};
+    }
+}
+
+sub enriched_delimiter {
+    my $self = shift;
+    $self->{enriched_delimiter} = shift if @_;
+    $self->{enriched_delimiter};
+}
+
+sub html {
+    my $self = shift;
+    if (@_) {
+        $self->{html} = shift;
+    }
+    elsif ( defined wantarray ) {
+        if ( !defined $self->{html} && defined( my $plain = $self->plain ) ) {
+            require HTML::Entities
+              and HTML::Entities->import('encode_entities')
+              unless defined &encode_entities;
+            $self->{html} = join '<br>', split /\n/, encode_entities($plain);
+        }
+        $self->{html};
+    }
+}
+
+sub html_delimiter {
+    my $self = shift;
+    $self->{html_delimiter} = shift if @_;
+    $self->{html_delimiter};
+}
+
+sub plain {
+    my $self = shift;
+    $self->{plain} = shift if @_;
+    $self->{plain};
+}
+
+sub plain_delimiter {
+    my $self = shift;
+    $self->{plain_delimiter} = shift if @_;
+    $self->{plain_delimiter};
+}
+
+sub unsign {
+    my $self = shift;
+    $self->{unsign} = shift if @_;
+    $self->{unsign};
+}
+
+sub signature {
+    my ( $self, $type ) = @_;
+    defined( my $signature = $self->$type ) or return;
+    my $delimiter_method = $type . '_delimiter';
+    $self->$delimiter_method . $signature;
+}
+
+sub handler_multipart_alternative {    # add trailer to all parts
+    my ( $self, $entity ) = @_;
+    $self->append($_) for my @parts = $entity->parts;
+    @parts;
+}
+
+sub handler_multipart_mixed {          # append trailer as separate part
+    my ( $self, $entity ) = @_;
+    require Encode and Encode->import('encode_utf8')
+      unless defined &encode_utf8;
+    $entity->add_part(
+        my $e = MIME::Entity->build(
+            Top      => 0,
+            Charset  => 'UTF-8',
+            Encoding => '-SUGGEST',
+            Type     => grep( lc $_->mime_type eq 'text/html', $entity->parts )
+            ? ( 'text/html', Data => encode_utf8( $self->signature('html') ) )
+            : grep( lc $_->mime_type eq 'text/enriched', $entity->parts )
+            ? (
+                'text/enriched',
+                Data => encode_utf8( $self->signature('enriched') )
+              )
+            : (
+                'text/plain', Data => encode_utf8( $self->signature('plain') )
+            )
+        )
+    );
+}
+
+sub handler_multipart_related {    # add trailer to the first part
+    my ( $self, $entity ) = @_;
+    $self->append( ( $entity->parts )[0] );
+}
+
+sub handler_multipart_signed {
+    my ( $self, $entity ) = @_;
+    return unless $self->unsign;
+
+    {                              # Inspired by MIME::Entity->make_singlepart:
+
+        my ($part) = my @parts = $entity->parts;
+        croak 'Invalid multipart/signed containing '
+          . @parts . ' part'
+          . ( @parts != 1 && 's' )
+          if @parts != 2;
+
+        # Get rid of all our existing content info:
+        /^content-/i and $entity->head->delete($_) for $entity->head->tags;
+
+        # Populate ourselves with any content info from the part:
+        for my $tag ( grep /^content-/i, $part->head->tags ) {
+            $entity->head->add( $tag, $_ ) for $part->head->get($tag);
+        }
+
+        # Save reconstructed header, replace our guts, and restore header:
+        my $new_head = $entity->head;
+        %$entity = %$part;    # shallow copy is ok!
+        $entity->head($new_head);
+    }
+
+    $self->append($entity);
+}
+
+sub handler_text_enriched {    # append trailer
+    my ( $self, $entity ) = @_;
+    _replace_body( $entity,
+        _decoded_body($entity) . $self->signature('enriched') );
+}
+
+sub handler_text_html {        # append trailer to <body>
+    my ( $self, $entity ) = @_;
+    my $body = $entity->bodyhandle->as_string;
+    require HTML::Parser;
+    my $new_body;
+    my $parser = HTML::Parser->new(
+        end_h => [
+            sub {
+                my ( $text, $tagname ) = @_;
+                $new_body .=
+                  ( $self->html_delimiter // '' ) . ( $self->html // '' )
+                  if lc $tagname eq 'body';
+                $new_body .= $text;
+            },
+            'text,tagname'
+        ],
+        default_h => [ sub { $new_body .= shift }, 'text' ],
+    );
+    $parser->parse($body);
+    _replace_body( $entity, $new_body );
+}
+
+sub handler_text_plain {    # append trailer
+    my ( $self, $entity ) = @_;
+    _replace_body( $entity,
+        _decoded_body($entity) . $self->signature('plain') );
+}
+
+sub new {
+    my $package = shift;
+    $package = ref $package if length ref $package;
+    croak 'Invalid number of arguments to ->new' if @_ % 2;
+    my $self = bless {
+        enriched_delimiter => "\n\n-- \n",
+        html_delimiter     => '<hr>',
+        plain_delimiter    => "\n\n-- \n",
+      },
+      $package;
+    while ( my $method = shift ) {
+        $self->$method(shift);
+    }
+    $self;
+}
+
+sub entity {
+    my $self = shift;
+    $self->{entity} = shift if @_;
+    $self->{entity};
+}
+
+sub parser {
+    my $self = shift;
+    if (@_) {
+        $self->{parser} = shift;
+    }
+    elsif ( !$self->{parser} ) {
+        for ( $self->{parser} ) {
+            $_ = MIME::Parser->new;
+            $_->tmp_to_core(1);
+            $_->output_to_core(1);
+        }
+    }
+    $self->{parser};
+}
+
+sub parse {
+    my $self = shift;
+    $self->{entity} = $self->parser->parse(@_);
+}
+
+sub parse_data {
+    my $self = shift;
+    $self->{entity} = $self->parser->parse_data(@_);
+}
+
+sub parse_open {
+    my $self = shift;
+    $self->{entity} = $self->parser->parse_open(@_);
+}
+
+sub parse_two {
+    my $self = shift;
+    $self->{entity} = $self->parser->parse_two(@_);
+}
+
+sub append {
+    my $self = shift;
+    my $entity = shift || $self->{entity}
+      or croak( 'You must first hand in an e-mail message'
+          . ' before trying to append a signature.' );
+    ( my $handler_method =
+          'handler_' . lc( my $mime_type = $entity->mime_type ) ) =~ y!/!_!;
+    $self->can($handler_method) and $self->$handler_method($entity)
+      or croak "Cannot handle $mime_type messages";
+    $entity;
+}
+
+__END__
 
 =head1 NAME
 
-Mail::Signature - The great new Mail::Signature!
+Mail::Signature - appends signature to mail messages
 
 =head1 VERSION
 
 Version 0.01
 
-=cut
-
-our $VERSION = '0.01';
-
-
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+    my $ms = Mail::Signature->new(
+        plain => 'Das ist der Rand von Ostermundigen.' 
+    );
+    $ms->parse( \*STDIN );
+    $ms->append;
+    $ms->entity->print;
 
-Perhaps a little code snippet.
+Or, alternatively:
 
-    use Mail::Signature;
+    my $ms = Mail::Signature->new(
+        plain => 'Das ist der Rand von Ostermundigen.' 
+    );
+    my $entity = MIME::Parser->new->parse( \*STDIN );
+    $ms->append($entity);
+    $entity->print;
 
-    my $foo = Mail::Signature->new();
-    ...
+Or even:
 
-=head1 EXPORT
+    Mail::Signature->new(
+        plain => 'Das ist der Rand von Ostermundigen.',
+        parse => \*STDIN
+    )->append->print;
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=head1 DESCRIPTION
 
-=head1 SUBROUTINES/METHODS
+This module appends a signature to an e-mail messages.
+It tries its best to cope with any encodings and MIME structures.
 
-=head2 function1
+=head1 METHODS
 
-=cut
+=over 4
 
-sub function1 {
-}
+=item ->new
 
-=head2 function2
+Constructs a L<Mail::Signature> object.
+You may optionally pass additional method =E<gt> argument pairs
+as a shortcut to calling the respective methods.
+(This only works for methods which require exactly one argument.)
 
-=cut
+=item ->plain
 
-sub function2 {
-}
+Sets and/or returns the plaintext version of the signature to append.
+
+=item ->enriched
+
+Sets and/or returns the L<enriched text|https://tools.ietf.org/html/rfc1896>
+version of the signature to append.
+
+=item ->html
+
+Sets and/or returns the HTML version of the signature to append.
+If not given, will be automatically deducted from the plaintext version.
+
+=item ->plain_delimiter
+
+Sets and/or returns the delimiter to insert before the signature within a
+text/plain part.
+
+Default: C<\n\n-- \n>
+
+=item ->enriched_delimiter
+
+Sets and/or returns the delimiter to insert before the signature within a
+L<text/enriched|https://tools.ietf.org/html/rfc1896> part.
+
+Default: C<\n\n-- \n>
+
+=item ->html_delimiter
+
+Sets and/or returns the delimiter to insert before the signature within a
+text/html part.
+
+Default: C<< <hr> >>
+
+=item ->parse
+
+=item ->parse_data
+
+=item ->parse_open
+
+=item ->parse_two
+
+These are wrappers to the methods of the same name from L<MIME::Parser>
+to ease parsing of mail messages.
+Will store the L<MIME::Entity> returned in the L<Mail::Signature> object
+for further processing.
+
+=item ->parser
+
+Gets or sets the L<MIME::Parser> object used by the C<parse*> methods
+mentioned above.
+If you do not supply a parser object, Mail::Signature will create one
+by itself as needed.
+
+=item ->entity
+
+Gets or sets the L<MIME::Entity> object which stores the mail message.
+
+=item ->unsign
+
+When given a true value as argument, multipart/signed parts of the message
+will automatically be removed during L<< ->append >>, so that we can append
+a (text) signature without invalidating the (cryptographic) signature.
+
+=item ->append
+
+Appends the signature to the L<MIME::Entity> stored in the
+L<Mail::Signature> object.
+Alternatively you may supply a L<MIME::Entity> object yourself
+which will then I<not> be stored in the L<Mail::Signature> object.
+In any case, the L<MIME::Entity> object will be modified as the
+signature is added.
+Returns the L<MIME::Entity> object.
+
+This method will die if it cannot append a signature,
+e.g. because the mail does not contain a text/plain and/or text/html part
+or if the text is enclosed in a multipart/signed part and you have not
+specified L<< /->unsign >>.
+
+=back
 
 =head1 AUTHOR
 
-Martin H. Sluka, C<< <fany at cpan.org> >>
+Martin H. Sluka, C<< <fany@cpan.org> >>
 
 =head1 BUGS
 
@@ -59,15 +415,11 @@ Please report any bugs or feature requests to C<bug-mail-signature at rt.cpan.or
 the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Mail-Signature>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
-
-
-
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc Mail::Signature
-
 
 You can also look for information at:
 
@@ -91,9 +443,7 @@ L<https://metacpan.org/release/Mail-Signature>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 

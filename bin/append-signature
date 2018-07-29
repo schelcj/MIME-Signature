@@ -1,0 +1,68 @@
+#!/usr/bin/env perl
+
+use 5.014;
+use warnings;
+
+use Getopt::Long qw(GetOptions);
+use Path::Tiny qw(path);
+use Mail::Signature;
+use Path::Tiny qw(path);
+
+use constant {
+    EXIT_SUCCESS         => 0,
+    EXIT_SUCCESS_ABORT   => 99,
+    EXIT_PERMANENT_ERROR => 100,
+    EXIT_SOFT_ERROR      => 111,
+};
+
+$SIG{__DIE__} = sub {
+    print STDERR @_;
+    exit EXIT_SOFT_ERROR;
+};
+
+sub read_file {
+    my ( $option, $value ) = @_;
+    path($value)->slurp( { binmode => ':encoding(UTF-8)' } );
+}
+
+my %options;
+GetOptions
+  \%options,
+  'help' => sub { exec perldoc => -F => $0 or die "Cannot exec perldoc: $!\n" },
+  'unsign!', map {
+    my $type = $_;
+    "$type=s", "$type-file=s" => sub { $options{$type} = &read_file };
+  } qw(enriched html plain);
+
+Mail::Signature->new( parse => \*STDIN, %options )->append->print;
+
+__END__
+
+=encoding UTF-8
+
+=head1 NAME
+
+append-signature - append signature to mail message
+
+=head1 SYNOPSIS
+
+    append-signature -text file <mail.in >mail.out
+
+=head1 DESCRIPTION
+
+This filter adds a signature to the first text/plain or text/html part
+(or both, if they are contained in a multipart/alternative) of the
+message/rfc822 given on the standard input and emits the result to
+the standard output.
+
+The trailer text is expected to be UTF-8 encoded.
+
+=head1 OPTIONS
+
+=head2 -help
+
+Show this documentation and exit.
+
+=head1 AUTHOR
+
+Martin H. Sluka C<< <fany@cpan.org> >>

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+prefix=/home/vpopmail/domains/mensa.de
+maildir="$prefix/beispiel/Maildir/new"
+find /home/vpopmail/domains/mensa.de -type f -path '*/archive/*' -name '??' |
+    perl -Ilib bin/dump_mail_struct -files-from-stdin -uniq -quiet |
+while read file; do
+    echo -n "$file …" >/dev/tty
+    flat=$(echo "$file" | sed 'y!/!_!')
+    cat "$file" >"$maildir/$flat.old"
+    perl -Ilib bin/append-signature <"$file" >"$maildir/$flat.new" -plain-file etc/testsig
+    echo ' done.' >/dev/tty
+done
