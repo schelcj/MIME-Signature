@@ -3,7 +3,7 @@ package Mail::Signature;
 use 5.014;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp qw(croak);
 use Encode qw(decode encode encode_utf8);
@@ -69,7 +69,8 @@ sub html {
             require HTML::Entities
               and HTML::Entities->import('encode_entities')
               unless defined &encode_entities;
-            $self->{html} = join '<br>', split /\n/, encode_entities($plain);
+            $self->{html} =
+              join( '<br>', split /\n/, encode_entities($plain) ) . "\n";
         }
         $self->{html};
     }
