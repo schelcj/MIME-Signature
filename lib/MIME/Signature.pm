@@ -181,7 +181,7 @@ sub handler_text_enriched {    # append trailer
 
 sub handler_text_html {        # append trailer to <body>
     my ( $self, $entity ) = @_;
-    my $body = $entity->bodyhandle->as_string;
+    my $body = _decoded_body($entity);
     require HTML::Parser;
     my $new_body;
     my $parser = HTML::Parser->new(
