@@ -7,7 +7,7 @@ use Test::More;
 plan tests => 1;
 
 BEGIN {
-    use_ok( 'Mail::Signature' ) || print "Bail out!\n";
+    use_ok( 'MIME::Signature' ) || print "Bail out!\n";
 }
 
-diag( "Testing Mail::Signature $Mail::Signature::VERSION, Perl $], $^X" );
+diag( "Testing MIME::Signature $MIME::Signature::VERSION, Perl $], $^X" );

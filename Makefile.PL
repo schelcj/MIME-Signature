@@ -4,10 +4,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME          => 'Mail::Signature',
+    NAME          => 'MIME::Signature',
     AUTHOR        => q{Martin H. Sluka <fany@cpan.org>},
-    VERSION_FROM  => 'lib/Mail/Signature.pm',
-    ABSTRACT_FROM => 'lib/Mail/Signature.pm',
+    VERSION_FROM  => 'lib/MIME/Signature.pm',
+    ABSTRACT_FROM => 'lib/MIME/Signature.pm',
     EXE_FILES     => [
         qw{
           bin/append-signature
@@ -31,5 +31,5 @@ WriteMakefile(
         'MIME::Parser'   => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES    => 'Mail-Signature-*' },
+    clean => { FILES    => 'MIME-Signature-*' },
 );

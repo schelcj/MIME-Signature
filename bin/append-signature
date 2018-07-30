@@ -5,7 +5,7 @@ use warnings;
 
 use Getopt::Long qw(GetOptions);
 use Path::Tiny qw(path);
-use Mail::Signature;
+use MIME::Signature;
 use Path::Tiny qw(path);
 
 use constant {
@@ -34,7 +34,7 @@ GetOptions
     "$type=s", "$type-file=s" => sub { $options{$type} = &read_file };
   } qw(enriched html plain);
 
-Mail::Signature->new( parse => \*STDIN, %options )->append->print;
+MIME::Signature->new( parse => \*STDIN, %options )->append->print;
 
 __END__
 

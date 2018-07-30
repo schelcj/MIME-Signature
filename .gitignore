@@ -14,5 +14,5 @@ inc/
 nytprof.out
 pod2htm*.tmp
 pm_to_blib
-Mail-Signature-*
-Mail-Signature-*.tar.gz
+MIME-Signature-*
+MIME-Signature-*.tar.gz

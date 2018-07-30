@@ -5,7 +5,7 @@ use warnings;
 
 use Getopt::Long qw(GetOptions);
 use Path::Tiny qw(path);
-use Mail::Signature;
+use MIME::Signature;
 
 use constant {
     EXIT_SUCCESS         => 0,
@@ -57,7 +57,7 @@ for (qw(enriched html)) {
     $options{$_} = $trailer;
 }
 
-Mail::Signature->new(
+MIME::Signature->new(
     parse => \*STDIN,
     unsign => $Unsign,
     %options

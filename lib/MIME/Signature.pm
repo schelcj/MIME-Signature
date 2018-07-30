@@ -1,4 +1,4 @@
-package Mail::Signature;
+package MIME::Signature;
 
 use 5.014;
 use warnings;
@@ -277,7 +277,7 @@ __END__
 
 =head1 NAME
 
-Mail::Signature - appends signature to mail messages
+MIME::Signature - appends signature to mail messages
 
 =head1 VERSION
 
@@ -285,7 +285,7 @@ Version 0.01
 
 =head1 SYNOPSIS
 
-    my $ms = Mail::Signature->new(
+    my $ms = MIME::Signature->new(
         plain => 'Das ist der Rand von Ostermundigen.' 
     );
     $ms->parse( \*STDIN );
@@ -294,7 +294,7 @@ Version 0.01
 
 Or, alternatively:
 
-    my $ms = Mail::Signature->new(
+    my $ms = MIME::Signature->new(
         plain => 'Das ist der Rand von Ostermundigen.' 
     );
     my $entity = MIME::Parser->new->parse( \*STDIN );
@@ -303,7 +303,7 @@ Or, alternatively:
 
 Or even:
 
-    Mail::Signature->new(
+    MIME::Signature->new(
         plain => 'Das ist der Rand von Ostermundigen.',
         parse => \*STDIN
     )->append->print;
@@ -319,7 +319,7 @@ It tries its best to cope with any encodings and MIME structures.
 
 =item ->new
 
-Constructs a L<Mail::Signature> object.
+Constructs a L<MIME::Signature> object.
 You may optionally pass additional method =E<gt> argument pairs
 as a shortcut to calling the respective methods.
 (This only works for methods which require exactly one argument.)
@@ -369,14 +369,14 @@ Default: C<< <hr> >>
 
 These are wrappers to the methods of the same name from L<MIME::Parser>
 to ease parsing of mail messages.
-Will store the L<MIME::Entity> returned in the L<Mail::Signature> object
+Will store the L<MIME::Entity> returned in the L<MIME::Signature> object
 for further processing.
 
 =item ->parser
 
 Gets or sets the L<MIME::Parser> object used by the C<parse*> methods
 mentioned above.
-If you do not supply a parser object, Mail::Signature will create one
+If you do not supply a parser object, MIME::Signature will create one
 by itself as needed.
 
 =item ->entity
@@ -392,9 +392,9 @@ a (text) signature without invalidating the (cryptographic) signature.
 =item ->append
 
 Appends the signature to the L<MIME::Entity> stored in the
-L<Mail::Signature> object.
+L<MIME::Signature> object.
 Alternatively you may supply a L<MIME::Entity> object yourself
-which will then I<not> be stored in the L<Mail::Signature> object.
+which will then I<not> be stored in the L<MIME::Signature> object.
 In any case, the L<MIME::Entity> object will be modified as the
 signature is added.
 Returns the L<MIME::Entity> object.
@@ -413,14 +413,14 @@ Martin H. Sluka, C<< <fany@cpan.org> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mail-signature at rt.cpan.org>, or through
-the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Mail-Signature>.  I will be notified, and then you'll
+the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=MIME-Signature>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Mail::Signature
+    perldoc MIME::Signature
 
 You can also look for information at:
 
@@ -428,19 +428,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker (report bugs here)
 
-L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=Mail-Signature>
+L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=MIME-Signature>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Mail-Signature>
+L<http://annocpan.org/dist/MIME-Signature>
 
 =item * CPAN Ratings
 
-L<https://cpanratings.perl.org/d/Mail-Signature>
+L<https://cpanratings.perl.org/d/MIME-Signature>
 
 =item * Search CPAN
 
-L<https://metacpan.org/release/Mail-Signature>
+L<https://metacpan.org/release/MIME-Signature>
 
 =back
 
@@ -489,4 +489,4 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =cut
 
-1; # End of Mail::Signature
+1; # End of MIME::Signature

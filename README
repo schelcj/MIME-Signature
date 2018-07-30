@@ -1,4 +1,4 @@
-Mail-Signature
+MIME-Signature
 
 The README is used to introduce the module and provide instructions on
 how to install the module, any machine dependencies it may have (for
@@ -26,21 +26,21 @@ SUPPORT AND DOCUMENTATION
 After installing, you can find documentation for this module with the
 perldoc command.
 
-    perldoc Mail::Signature
+    perldoc MIME::Signature
 
 You can also look for information at:
 
     RT, CPAN's request tracker (report bugs here)
-        https://rt.cpan.org/NoAuth/Bugs.html?Dist=Mail-Signature
+        https://rt.cpan.org/NoAuth/Bugs.html?Dist=MIME-Signature
 
     AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Mail-Signature
+        http://annocpan.org/dist/MIME-Signature
 
     CPAN Ratings
-        https://cpanratings.perl.org/d/Mail-Signature
+        https://cpanratings.perl.org/d/MIME-Signature
 
     Search CPAN
-        https://metacpan.org/release/Mail-Signature
+        https://metacpan.org/release/MIME-Signature
 
 
 LICENSE AND COPYRIGHT
