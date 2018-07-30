@@ -1,13 +1,11 @@
-#!/usr/bin/env perl
+#!perl
 
 use 5.014;
 use warnings;
 
 use constant {
-    EXIT_SUCCESS         => 0,
-    EXIT_SUCCESS_ABORT   => 99,
-    EXIT_PERMANENT_ERROR => 100,
-    EXIT_SOFT_ERROR      => 111,
+    EXIT_SOFT_ERROR => 111,
+    EXIT_SUCCESS    => 0,
 };
 
 BEGIN {
@@ -17,24 +15,36 @@ BEGIN {
     };
 }
 
+use Encode qw(decode FB_CROAK);
 use Getopt::Long qw(GetOptions);
 use Path::Tiny qw(path);
 use MIME::Signature;
 use Path::Tiny qw(path);
 
+my $Encoding = 'UTF-8';
+
 sub read_file {
     my ( $option, $value ) = @_;
-    path($value)->slurp( { binmode => ':encoding(UTF-8)' } );
+    path($value)->slurp( { binmode => ":encoding($Encoding)" } );
 }
 
 my %options;
 GetOptions
   \%options,
+  'encoding=s' => \$Encoding,
   'help' => sub { exec perldoc => -F => $0 or die "Cannot exec perldoc: $!\n" },
   'unsign!', map {
     my $type = $_;
-    "$type=s", "$type-file=s" => sub { $options{$type} = &read_file };
-  } qw(enriched html plain);
+    (
+        "$type=s" => sub {
+            $options{$type} = decode( $Encoding, $_[1], FB_CROAK );
+        },
+        "$type-file=s" => sub {
+            $options{$type} = &read_file;
+        }
+    );
+  } qw(enriched html plain)
+  or exit EXIT_SOFT_ERROR;
 
 MIME::Signature->new( parse => \*STDIN, %options )->append->print;
 
@@ -56,8 +66,6 @@ This filter adds a signature to the first text/plain, text/enriched
 or text/html part (or all of them, if they are contained in a
 multipart/alternative) of the message/rfc822 given on the standard input
 and emits the result to the standard output.
-
-The trailer text is expected to be UTF-8 encoded.
 
 =head1 OPTIONS
 
@@ -87,6 +95,11 @@ respectively text/html parts of e-mails via file.
 
 When missing, the text/enriched and text/html versions will be derived
 from the text/plain signature.
+
+=item -encoding name
+
+Set the encoding for all following signatures.
+Default is UTF-8.
 
 =head2 other
 

@@ -1,13 +1,11 @@
-#!/usr/bin/env perl
+#!perl
 
 use 5.014;
 use warnings;
 
 use constant {
-    EXIT_SUCCESS         => 0,
-    EXIT_SUCCESS_ABORT   => 99,
-    EXIT_PERMANENT_ERROR => 100,
-    EXIT_SOFT_ERROR      => 111,
+    EXIT_SOFT_ERROR => 111,
+    EXIT_SUCCESS    => 0,
 };
 
 BEGIN {
@@ -25,7 +23,7 @@ GetOptions
   'debug+' => \my $Debug,
   'help' => sub { exec perldoc => -F => $0 or die "Cannot exec perldoc: $!\n" },
   'unsign!' => \my $Unsign,
-  ;
+  or exit EXIT_SOFT_ERROR;
 
 die "USAGE: $0 <list-dir>\n" if @ARGV != 1;
 
