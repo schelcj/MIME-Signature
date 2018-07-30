@@ -46,22 +46,55 @@ append-signature - append signature to mail message
 
 =head1 SYNOPSIS
 
-    append-signature -text file <mail.in >mail.out
+    append-signature -plain-file file <mail.in >mail.out
 
 =head1 DESCRIPTION
 
-This filter adds a signature to the first text/plain or text/html part
-(or both, if they are contained in a multipart/alternative) of the
-message/rfc822 given on the standard input and emits the result to
-the standard output.
+This filter adds a signature to the first text/plain, text/enriched
+or text/html part (or all of them, if they are contained in a
+multipart/alternative) of the message/rfc822 given on the standard input
+and emits the result to the standard output.
 
 The trailer text is expected to be UTF-8 encoded.
 
 =head1 OPTIONS
 
-=head2 -help
+=head2 to provide the signatures
+
+=over 4
+
+=item -plain text
+
+=item -enriched text
+
+=item -html text
+
+Used to provide the signature to be appended to text/plain, text/enriched
+respectively text/html parts of e-mails directly on the command line.
+
+=item -plain-file file
+
+=item -enriched-file file
+
+=item -html-file file
+
+Used to provide the signature to be appended to text/plain, text/enriched
+respectively text/html parts of e-mails via file.
+
+=back
+
+When missing, the text/enriched and text/html versions will be derived
+from the text/plain signature.
+
+=head2 other
+
+=over 4
+
+=item -help
 
 Show this documentation and exit.
+
+=back
 
 =head1 AUTHOR
 
