@@ -3,11 +3,6 @@
 use 5.014;
 use warnings;
 
-use Getopt::Long qw(GetOptions);
-use Path::Tiny qw(path);
-use MIME::Signature;
-use Path::Tiny qw(path);
-
 use constant {
     EXIT_SUCCESS         => 0,
     EXIT_SUCCESS_ABORT   => 99,
@@ -15,10 +10,17 @@ use constant {
     EXIT_SOFT_ERROR      => 111,
 };
 
-$SIG{__DIE__} = sub {
-    print STDERR @_;
-    exit EXIT_SOFT_ERROR;
-};
+BEGIN {
+    $SIG{__DIE__} = sub {
+        print STDERR @_;
+        exit EXIT_SOFT_ERROR;
+    };
+}
+
+use Getopt::Long qw(GetOptions);
+use Path::Tiny qw(path);
+use MIME::Signature;
+use Path::Tiny qw(path);
 
 sub read_file {
     my ( $option, $value ) = @_;

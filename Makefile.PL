@@ -30,6 +30,7 @@ WriteMakefile(
         'HTML::Parser'   => 0,
         'MIME::Parser'   => 0,
     },
-    dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES    => 'MIME-Signature-*' },
+    dist     => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean    => { FILES    => 'MIME-Signature-*' },
+    PERM_DIR => '755',
 );
