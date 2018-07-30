@@ -35,7 +35,10 @@ sub _replace_body {
         }
     }
     my $fh = $entity->bodyhandle->open('w') or die "Open body: $!\n";
-    $fh->print($body);
+
+    # Avoid "SMTP cannot transfer messages with partial final lines. (#5.6.2)":
+    $fh->print( $body, $body !~ /\n\z/ && "\n" );
+
     $fh->close or die "Cannot replace body: $!\n";
 }
 
@@ -412,7 +415,7 @@ Martin H. Sluka, C<< <fany@cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-mail-signature at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-mime-signature at rt.cpan.org>, or through
 the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=MIME-Signature>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
