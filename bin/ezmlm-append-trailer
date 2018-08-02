@@ -50,6 +50,8 @@ sub read_file {
 my %options;
 unless ( defined( $options{plain} = read_file qw/text trailer.plain/ ) ) {
     debug 'No trailer found; aborting.';
+    local $/ = \8192;
+    print while <STDIN>;
     exit EXIT_SUCCESS;
 }
 for (qw(enriched html)) {
