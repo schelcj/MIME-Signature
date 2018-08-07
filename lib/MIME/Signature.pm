@@ -106,7 +106,7 @@ sub unsign {
     $self->{unsign};
 }
 
-sub signature {
+sub _signature {
     my ( $self, $type ) = @_;
     defined( my $signature = $self->$type ) or return;
     my $delimiter_method = $type . '_delimiter';
@@ -129,14 +129,14 @@ sub handler_multipart_mixed {          # append trailer as separate part
             Charset  => 'UTF-8',
             Encoding => '-SUGGEST',
             Type     => grep( lc $_->mime_type eq 'text/html', $entity->parts )
-            ? ( 'text/html', Data => encode_utf8( $self->signature('html') ) )
+            ? ( 'text/html', Data => encode_utf8( $self->_signature('html') ) )
             : grep( lc $_->mime_type eq 'text/enriched', $entity->parts )
             ? (
                 'text/enriched',
-                Data => encode_utf8( $self->signature('enriched') )
+                Data => encode_utf8( $self->_signature('enriched') )
               )
             : (
-                'text/plain', Data => encode_utf8( $self->signature('plain') )
+                'text/plain', Data => encode_utf8( $self->_signature('plain') )
             )
         )
     );
@@ -179,7 +179,7 @@ sub handler_multipart_signed {
 sub handler_text_enriched {    # append trailer
     my ( $self, $entity ) = @_;
     _replace_body( $entity,
-        _decoded_body($entity) . $self->signature('enriched') );
+        _decoded_body($entity) . $self->_signature('enriched') );
 }
 
 sub handler_text_html {        # append trailer to <body>
@@ -191,9 +191,7 @@ sub handler_text_html {        # append trailer to <body>
         end_h => [
             sub {
                 my ( $text, $tagname ) = @_;
-                $new_body .=
-                  ( $self->html_delimiter // '' ) . ( $self->html // '' )
-                  if lc $tagname eq 'body';
+                $new_body .= $self->_signature('html') if lc $tagname eq 'body';
                 $new_body .= $text;
             },
             'text,tagname'
@@ -207,7 +205,7 @@ sub handler_text_html {        # append trailer to <body>
 sub handler_text_plain {    # append trailer
     my ( $self, $entity ) = @_;
     _replace_body( $entity,
-        _decoded_body($entity) . $self->signature('plain') );
+        _decoded_body($entity) . $self->_signature('plain') );
 }
 
 sub new {
@@ -409,6 +407,52 @@ This method will die if it cannot append a signature,
 e.g. because the mail does not contain a text/plain and/or text/html part
 or if the text is enclosed in a multipart/signed part and you have not
 specified L<< /->unsign >>.
+
+=back
+
+=head1 SUBCLASSING
+
+The module uses the following methods to handle the respective MIME types.
+You may overwrite them and/or provide likely named additional handler methods
+to deal with other types.
+
+The method gets passed the MIME part in question.
+It should alter this part if it wants to append the signature.
+It is expected to return a boolean value to signal success.
+That is, L<< /->append >> will croak when a handler method returns false.
+
+=over 4
+
+=item ->handler_multipart_alternative
+
+appends the signature to any contained part
+
+=item ->handler_multipart_mixed
+
+appends another part with the signature inside
+
+=item ->handler_multipart_related
+
+appends the signature to the first contained part
+
+=item ->handler_multipart_signed
+
+If L<< /-unsign >> is set, replaces the multipart/signed part
+by the first part it contains.
+
+Returns false otherwise.
+
+=item ->handler_text_html
+
+appends the HTML version of the signature to the end of the C<< <body> >>
+
+=item ->handler_text_enriched
+
+appends the enriched text version of the signature
+
+=item ->handler_text_plain
+
+appends the plain version of the signature
 
 =back
 
