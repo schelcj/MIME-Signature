@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+# Appends test signatures to test mails.
+# If you run this, please examine the results afterwards
+# to make sure these are correct.
+
+cd t/mails/orig
+for mail in *; do
+    mkdir -p "../$mail"
+    for sig in ../../sigs/*; do
+        perl -I../../../lib ../../../bin/append-signature -plain-file "$sig" <"$mail" >../"$mail/${sig##*/}" | /bin/true
+    done
+done

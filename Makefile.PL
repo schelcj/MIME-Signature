@@ -23,7 +23,8 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => '0',
     },
     BUILD_REQUIRES => {
-        'Test::More' => '0',
+        'Path::Tiny' => 0,
+        'Test::More' => 0,
     },
     PREREQ_PM => {
         'HTML::Entities' => 0,

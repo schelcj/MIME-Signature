@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Test script for module author only. Please ignore.
+
 prefix=/home/vpopmail/domains/mensa.de
 maildir="$prefix/beispiel/Maildir/new"
 find /home/vpopmail/domains/mensa.de -type f -path '*/archive/*' -name '??' |
