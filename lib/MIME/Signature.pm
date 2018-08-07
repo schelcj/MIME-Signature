@@ -20,24 +20,27 @@ sub _decoded_body {
 
 sub _replace_body {
     my ( $entity, $body ) = @_;
+    $body .= "\n" if $body !~ /\n\z/;
+    my $encoded_body;
     {
         my $encoding_ok;
         if ( my $charset = $entity->head->mime_attr('content-type.charset') ) {
             $encoding_ok = 1;
-            $body = encode $charset, $body, sub { undef $encoding_ok; '' };
+            $encoded_body = encode $charset, $body,
+              sub { undef $encoding_ok; '' };
         }
         unless ($encoding_ok) {
             my $head = $entity->head;
             $head->mime_attr( 'Content-Type', 'text/plain' )
               unless $head->mime_attr('content-type');
             $head->mime_attr( 'content-type.charset' => 'UTF-8' );
-            $body = encode_utf8($body);
+            $encoded_body = encode_utf8($body);
         }
     }
     my $fh = $entity->bodyhandle->open('w') or die "Open body: $!\n";
 
     # Avoid "SMTP cannot transfer messages with partial final lines. (#5.6.2)":
-    $fh->print( $body, $body !~ /\n\z/ && "\n" );
+    $fh->print($encoded_body);
 
     $fh->close or die "Cannot replace body: $!\n";
 }
