@@ -96,10 +96,14 @@ respectively text/html parts of e-mails via file.
 When missing, the text/enriched and text/html versions will be derived
 from the text/plain signature.
 
+=over 4
+
 =item -encoding name
 
 Set the encoding for all following signatures.
 Default is UTF-8.
+
+=back
 
 =head2 other
 
