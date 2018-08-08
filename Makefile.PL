@@ -31,7 +31,15 @@ WriteMakefile(
         'HTML::Parser'   => 0,
         'MIME::Parser'   => 0,
     },
-    dist     => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean    => { FILES    => 'MIME-Signature-*' },
+    TEST_REQUIRES => {
+        'Path::Tiny' => 0,
+        'Test::More' => 0,
+    },
+    dist => {
+        COMPRESS => 'gzip -9f',
+        SUFFIX   => 'gz',
+        TARFLAGS => '--portability -cvf',
+    },
+    clean    => { FILES => 'MIME-Signature-*' },
     PERM_DIR => '755',
 );
