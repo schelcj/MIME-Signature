@@ -38,4 +38,15 @@ WriteMakefile(
     },
     clean    => { FILES => 'MIME-Signature-*' },
     PERM_DIR => '755',
+
+    META_MERGE => {
+        resources => {
+            homepage   => 'https://github.com/fany/MIME-Signature',
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/fany/MIME-Signature.git',
+                web  => 'https://github.com/fany/MIME-Signature',
+            },
+        },
+    },
 );
