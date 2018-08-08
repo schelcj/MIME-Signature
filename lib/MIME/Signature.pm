@@ -3,7 +3,7 @@ package MIME::Signature;
 use 5.014;
 use warnings;
 
-our $VERSION = '0.1';
+our $VERSION = '0.11';
 
 use Carp qw(croak);
 use Encode qw(decode encode encode_utf8);

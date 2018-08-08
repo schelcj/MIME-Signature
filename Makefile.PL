@@ -22,10 +22,6 @@ WriteMakefile(
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => '0',
     },
-    BUILD_REQUIRES => {
-        'Path::Tiny' => 0,
-        'Test::More' => 0,
-    },
     PREREQ_PM => {
         'HTML::Entities' => 0,
         'HTML::Parser'   => 0,
