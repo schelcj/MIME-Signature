@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Config;
 use IPC::Open3 qw(open3);
 use Path::Tiny qw(path);
 use Symbol qw(gensym);
@@ -15,8 +16,8 @@ BEGIN {
 for my $mail ( path(qw/t mails orig/)->children ) {
     for my $sig ( path(qw/t sigs/)->children ) {
         open3 my $in, my $out, my $err = gensym,
-          perl          => path(qw/bin append-signature/),
-          '-plain-file' => $sig;
+          $Config{perlpath} => path(qw/bin append-signature/),
+          '-plain-file'     => $sig;
         print $in $mail->slurp;
         close $in;
         local $/;
