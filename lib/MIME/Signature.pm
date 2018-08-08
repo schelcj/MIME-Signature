@@ -3,7 +3,7 @@ package MIME::Signature;
 use 5.014;
 use warnings;
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 use Carp qw(croak);
 use Encode qw(decode encode encode_utf8);
@@ -285,7 +285,7 @@ MIME::Signature - appends signature to mail messages
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =cut
 
