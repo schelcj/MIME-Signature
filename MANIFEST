@@ -5,15 +5,20 @@ bin/ignore_errors		wrapper to pass through mails unchanged if no signature can b
 Changes
 lib/MIME/Signature.pm
 Makefile.PL
+MANIFEST.SKIP			lists files not required in the distribution
 MANIFEST			This list of files
-MANIFEST.SKIP			lists files not required in the distribution, for t/manifest.t
 README
 t/00-load.t
 t/10-append-signature.t
+t/mails/alternative-thunderbird/ascii
+t/mails/alternative-thunderbird/lines
+t/mails/alternative-thunderbird/testsig
+t/mails/alternative-thunderbird/utf8
 t/mails/attachment-mutt/ascii
 t/mails/attachment-mutt/lines
 t/mails/attachment-mutt/testsig
 t/mails/attachment-mutt/utf8
+t/mails/orig/alternative-thunderbird
 t/mails/orig/attachment-mutt
 t/mails/orig/signed-mutt
 t/mails/orig/simple-mutt
