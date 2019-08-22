@@ -45,6 +45,19 @@ sub _replace_body {
     $fh->close or die "Cannot replace body: $!\n";
 }
 
+sub _combine {
+    my $self = shift;
+    my $order = shift;
+    my $entity = shift || $self->{entity}
+      or croak( 'You must first hand in an e-mail message'
+          . ' before trying to append a signature.' );
+    ( my $handler_method =
+          'handler_' . lc( my $mime_type = $entity->mime_type ) ) =~ y!/!_!;
+    $self->can($handler_method) and $self->$handler_method($order, $entity)
+      or croak "Cannot handle $mime_type messages";
+    $entity;
+}
+
 sub enriched {
     my $self = shift;
     if (@_) {
@@ -114,13 +127,15 @@ sub _signature {
 }
 
 sub handler_multipart_alternative {    # add trailer to all parts
-    my ( $self, $entity ) = @_;
-    $self->append($_) for my @parts = $entity->parts;
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
+    $self->$order($_) for my @parts = $entity->parts;
     @parts;
 }
 
 sub handler_multipart_mixed {          # append trailer as separate part
-    my ( $self, $entity ) = @_;
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
     require Encode and Encode->import('encode_utf8')
       unless defined &encode_utf8;
     $entity->add_part(
@@ -143,12 +158,14 @@ sub handler_multipart_mixed {          # append trailer as separate part
 }
 
 sub handler_multipart_related {    # add trailer to the first part
-    my ( $self, $entity ) = @_;
-    $self->append( ( $entity->parts )[0] );
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
+    $self->$order( ( $entity->parts )[0] );
 }
 
 sub handler_multipart_signed {
-    my ( $self, $entity ) = @_;
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
     return unless $self->unsign;
 
     {                              # Inspired by MIME::Entity->make_singlepart:
@@ -173,17 +190,24 @@ sub handler_multipart_signed {
         $entity->head($new_head);
     }
 
-    $self->append($entity);
+    $self->$order($entity);
 }
 
 sub handler_text_enriched {    # append trailer
-    my ( $self, $entity ) = @_;
-    _replace_body( $entity,
-        _decoded_body($entity) . $self->_signature('enriched') );
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
+
+    if ($order eq 'prepend') {
+      _replace_body( $entity, $self->_signature('enriched') . _decoded_body($entity) );
+    } else {
+      _replace_body( $entity, _decoded_body($entity) . $self->_signature('enriched') );
+    }
 }
 
 sub handler_text_html {        # append trailer to <body>
-    my ( $self, $entity ) = @_;
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
+
     my $body = _decoded_body($entity);
     require HTML::Parser;
     my $new_body;
@@ -191,7 +215,7 @@ sub handler_text_html {        # append trailer to <body>
         end_h => [
             sub {
                 my ( $text, $tagname ) = @_;
-                $new_body .= $self->_signature('html') if lc $tagname eq 'body';
+                $new_body .= $self->_signature('html') if lc $tagname eq 'body'; # TODO - not sure yet
                 $new_body .= $text;
             },
             'text,tagname'
@@ -203,9 +227,14 @@ sub handler_text_html {        # append trailer to <body>
 }
 
 sub handler_text_plain {    # append trailer
-    my ( $self, $entity ) = @_;
-    _replace_body( $entity,
-        _decoded_body($entity) . $self->_signature('plain') );
+    my ( $self, $order, $entity ) = @_;
+    croak "Invalid order $order" unless $order =~ /prepend|append/;
+
+    if ($order eq 'prepend') {
+      _replace_body( $entity, $self->_signature('plain') . _decoded_body($entity) );
+    } else {
+      _replace_body( $entity, _decoded_body($entity) . $self->_signature('plain') );
+    }
 }
 
 sub new {
@@ -265,17 +294,8 @@ sub parse_two {
     $self->{entity} = $self->parser->parse_two(@_);
 }
 
-sub append {
-    my $self = shift;
-    my $entity = shift || $self->{entity}
-      or croak( 'You must first hand in an e-mail message'
-          . ' before trying to append a signature.' );
-    ( my $handler_method =
-          'handler_' . lc( my $mime_type = $entity->mime_type ) ) =~ y!/!_!;
-    $self->can($handler_method) and $self->$handler_method($entity)
-      or croak "Cannot handle $mime_type messages";
-    $entity;
-}
+sub append {  return shift->_combine('append', @_);   }
+sub prepend { return shift->_combine('prepend', @_); }
 
 my $version_pod = <<'=cut';
 
@@ -323,9 +343,18 @@ Or even:
         parse => \*STDIN
     )->append->print;
 
+Or also:
+
+    my $ms = MIME::Signature->new(
+        plain => 'Das ist der Rand von Ostermundigen.' 
+    );
+    $ms->parse( \*STDIN );
+    $ms->prepend;
+    $ms->entity->print;
+
 =head1 DESCRIPTION
 
-This module appends a signature to an e-mail messages.
+This module appends, or prepends, a signature to an e-mail messages.
 It tries its best to cope with any encodings and MIME structures.
 
 =head1 METHODS
@@ -418,6 +447,10 @@ This method will die if it cannot append a signature,
 e.g. because the mail does not contain a text/plain and/or text/html part
 or if the text is enclosed in a multipart/signed part and you have not
 specified L<< /->unsign >>.
+
+=item ->prepend
+
+Same as L<< /->append >> but prepends the signature to the L<MIME::Entity>.
 
 =back
 
