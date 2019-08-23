@@ -133,7 +133,7 @@ sub handler_multipart_alternative {    # add trailer to all parts
     @parts;
 }
 
-sub handler_multipart_mixed {          # append trailer as separate part
+sub handler_multipart_mixed { # TODO         # append trailer as separate part
     my ( $self, $order, $entity ) = @_;
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     require Encode and Encode->import('encode_utf8')
@@ -163,7 +163,7 @@ sub handler_multipart_related {    # add trailer to the first part
     $self->$order( ( $entity->parts )[0] );
 }
 
-sub handler_multipart_signed {
+sub handler_multipart_signed { # TODO
     my ( $self, $order, $entity ) = @_;
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     return unless $self->unsign;
@@ -204,7 +204,7 @@ sub handler_text_enriched {    # append trailer
     }
 }
 
-sub handler_text_html {        # append trailer to <body>
+sub handler_text_html { # TODO       # append trailer to <body>
     my ( $self, $order, $entity ) = @_;
     croak "Invalid order $order" unless $order =~ /prepend|append/;
 
@@ -215,7 +215,7 @@ sub handler_text_html {        # append trailer to <body>
         end_h => [
             sub {
                 my ( $text, $tagname ) = @_;
-                $new_body .= $self->_signature('html') if lc $tagname eq 'body'; # TODO - not sure yet
+                $new_body .= $self->_signature('html') if lc $tagname eq 'body';
                 $new_body .= $text;
             },
             'text,tagname'

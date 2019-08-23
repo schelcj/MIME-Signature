@@ -26,6 +26,7 @@ for my $mail ( path(qw/t mails orig/)->children ) {
         my $expected = path(
             't/mails/',
             my $_mail = $mail->basename,
+            'prepend',
             my $_sig  = $sig->basename,
         )->slurp;
         is $result, $expected, "$_sig to $_mail ok";
