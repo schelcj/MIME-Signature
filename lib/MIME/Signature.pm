@@ -47,13 +47,13 @@ sub _replace_body {
 
 sub _combine {
     my $self = shift;
-    my $order = shift;
     my $entity = shift || $self->{entity}
       or croak( 'You must first hand in an e-mail message'
           . ' before trying to append a signature.' );
+    my $order = shift || 'append';
     ( my $handler_method =
           'handler_' . lc( my $mime_type = $entity->mime_type ) ) =~ y!/!_!;
-    $self->can($handler_method) and $self->$handler_method($order, $entity)
+    $self->can($handler_method) and $self->$handler_method($entity, $order)
       or croak "Cannot handle $mime_type messages";
     $entity;
 }
@@ -127,14 +127,16 @@ sub _signature {
 }
 
 sub handler_multipart_alternative {    # add trailer to all parts
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     $self->$order($_) for my @parts = $entity->parts;
     @parts;
 }
 
 sub handler_multipart_mixed { # TODO         # append trailer as separate part
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     require Encode and Encode->import('encode_utf8')
       unless defined &encode_utf8;
@@ -158,13 +160,15 @@ sub handler_multipart_mixed { # TODO         # append trailer as separate part
 }
 
 sub handler_multipart_related {    # add trailer to the first part
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     $self->$order( ( $entity->parts )[0] );
 }
 
 sub handler_multipart_signed { # TODO
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
     return unless $self->unsign;
 
@@ -194,7 +198,8 @@ sub handler_multipart_signed { # TODO
 }
 
 sub handler_text_enriched {    # append trailer
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
 
     if ($order eq 'prepend') {
@@ -205,7 +210,8 @@ sub handler_text_enriched {    # append trailer
 }
 
 sub handler_text_html { # TODO       # append trailer to <body>
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
 
     my $body = _decoded_body($entity);
@@ -227,7 +233,8 @@ sub handler_text_html { # TODO       # append trailer to <body>
 }
 
 sub handler_text_plain {    # append trailer
-    my ( $self, $order, $entity ) = @_;
+    my ( $self, $entity, $order ) = @_;
+    $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
 
     if ($order eq 'prepend') {
@@ -294,8 +301,8 @@ sub parse_two {
     $self->{entity} = $self->parser->parse_two(@_);
 }
 
-sub append {  return shift->_combine('append', @_);   }
-sub prepend { return shift->_combine('prepend', @_); }
+sub append {  return shift->_combine(shift, 'append');   }
+sub prepend { return shift->_combine(shift, 'prepend'); }
 
 my $version_pod = <<'=cut';
 
