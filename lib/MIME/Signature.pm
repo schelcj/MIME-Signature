@@ -164,7 +164,7 @@ sub handler_multipart_related {    # add trailer to the first part
     $self->$order( ( $entity->parts )[0] );
 }
 
-sub handler_multipart_signed { # TODO
+sub handler_multipart_signed {
     my ( $self, $entity, $order ) = @_;
     $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
