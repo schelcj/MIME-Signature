@@ -209,7 +209,7 @@ sub handler_text_enriched {    # append trailer
     }
 }
 
-sub handler_text_html { # TODO       # append trailer to <body>
+sub handler_text_html {        # append trailer to <body>
     my ( $self, $entity, $order ) = @_;
     $order //= 'append';
     croak "Invalid order $order" unless $order =~ /prepend|append/;
@@ -218,10 +218,18 @@ sub handler_text_html { # TODO       # append trailer to <body>
     require HTML::Parser;
     my $new_body;
     my $parser = HTML::Parser->new(
+        start_h => [
+          sub {
+            my ( $text, $tagname ) = @_;
+            $new_body .= $text;
+            $new_body .= $self->_signature('html') if lc $tagname eq 'body' and $order eq 'prepend';
+          },
+          'text,tagname'
+        ],
         end_h => [
             sub {
                 my ( $text, $tagname ) = @_;
-                $new_body .= $self->_signature('html') if lc $tagname eq 'body';
+                $new_body .= $self->_signature('html') if lc $tagname eq 'body' and $order eq 'append';
                 $new_body .= $text;
             },
             'text,tagname'
