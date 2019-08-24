@@ -480,34 +480,34 @@ That is, L<< /->append >> will croak when a handler method returns false.
 
 =over 4
 
-=item ->handler_multipart_alternative
+=item C<handler_multipart_alternative ENTITY [ORDER]>
 
-appends the signature to any contained part
+appends/prepends the signature to any contained part
 
-=item ->handler_multipart_mixed
+=item C<handler_multipart_mixed ENTITY>
 
 appends another part with the signature inside
 
-=item ->handler_multipart_related
+=item C<handler_multipart_related ENTITY [ORDER]>
 
-appends the signature to the first contained part
+appends/prepends the signature to the first contained part
 
-=item ->handler_multipart_signed
+=item C<handler_multipart_signed ENTITY [ORDER]>
 
 If L<< /-unsign >> is set, replaces the multipart/signed part
 by the first part it contains.
 
 Returns false otherwise.
 
-=item ->handler_text_html
+=item C<handler_text_html ENTITY [ORDER]>
 
 appends the HTML version of the signature to the end of the C<< <body> >>
 
-=item ->handler_text_enriched
+=item C<handler_text_enriched ENTITY [ORDER]>
 
 appends the enriched text version of the signature
 
-=item ->handler_text_plain
+=item C<handler_text_plain ENTITY [ORDER]>
 
 appends the plain version of the signature
 
