@@ -134,10 +134,8 @@ sub handler_multipart_alternative {    # add trailer to all parts
     @parts;
 }
 
-sub handler_multipart_mixed { # TODO         # append trailer as separate part
-    my ( $self, $entity, $order ) = @_;
-    $order //= 'append';
-    croak "Invalid order $order" unless $order =~ /prepend|append/;
+sub handler_multipart_mixed {          # append trailer as separate part
+    my ( $self, $entity ) = @_;
     require Encode and Encode->import('encode_utf8')
       unless defined &encode_utf8;
     $entity->add_part(
