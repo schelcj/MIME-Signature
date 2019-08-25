@@ -27,6 +27,7 @@ WriteMakefile(
         'HTML::Parser'   => 0,
         'MIME::Parser'   => 0,
         'Path::Tiny'     => 0,
+        'Const::Fast'    => 0,
     },
     TEST_REQUIRES => {
         'Test::More' => 0,

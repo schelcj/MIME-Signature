@@ -1,3 +1,4 @@
+requires 'Const::Fast';
 requires 'MIME::Parser';
 requires 'HTML::Entities';
 requires 'Path::Tiny';
