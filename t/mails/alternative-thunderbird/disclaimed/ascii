@@ -16,9 +16,15 @@ Content-Transfer-Encoding: 7bit
 
 
 
--- 
 Das ist der Rand von Ostermundigen.
+
+
 *Das ist der Rand von Ostermundigen.*
+
+
+
+Das ist der Rand von Ostermundigen.
+
 
 
 --------------73B2CD1536F26DE6926DC449
@@ -30,11 +36,16 @@ Content-Transfer-Encoding: 7bit
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
   </head>
-  <body text="#000000" bgcolor="#FFFFFF"><hr>Das ist der Rand von Ostermundigen.
+  <body text="#000000" bgcolor="#FFFFFF"><br /><hr />
+Das ist der Rand von Ostermundigen.
 
+<br /><hr />
     <p><b>Das ist der Rand von Ostermundigen.</b><br>
     </p>
-  </body>
+  <br /><hr />
+Das ist der Rand von Ostermundigen.
+
+<br /><hr /></body>
 </html>
 
 --------------73B2CD1536F26DE6926DC449--

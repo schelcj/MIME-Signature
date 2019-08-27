@@ -8,27 +8,29 @@ use base 'MIME::Signature';
 
 our $VERSION = '0.16';
 
-const my $NEWLINE   => "\n";
-const my $DELIMITER => "\n" . '-' x 10 . "\n";
+const my $NEWLINE         => "\n";
+const my $LINEBREAK       => "<br />";
+const my $HORIZONTAL_RULE => "<hr />";
+const my $DELIMITER       => "\n";
 
 sub new {
   my $class = shift;
-  my $self = $class->SUPER::new(@_);
+  my $self  = $class->SUPER::new(@_);
 
-  $self->enriched_delimiter($DELIMITER);
-  $self->html_delimiter('<br /><hr /><br />');
-  $self->plain_delimiter($DELIMITER);
+  $self->enriched_delimiter($NEWLINE);
+  $self->html_delimiter($LINEBREAK . $HORIZONTAL_RULE);
+  $self->plain_delimiter($NEWLINE);
 
   return $self;
 }
 
 sub _signature {
-    my ( $self, $type ) = @_;
-    defined( my $signature = $self->$type ) or return;
-    my $delimiter_method = $type . '_delimiter';
-    my $delimiter = $self->$delimiter_method;
+  my ($self, $type) = @_;
+  defined(my $signature = $self->$type) or return;
+  my $delimiter_method = $type . '_delimiter';
+  my $delimiter        = $self->$delimiter_method;
 
-    return join ($NEWLINE, ($delimiter, $sigature, $delimiter));
+  return join($NEWLINE, ($delimiter, $signature, $delimiter));
 }
 
 sub add {
