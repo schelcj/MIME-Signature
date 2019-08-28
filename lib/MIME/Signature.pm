@@ -3,11 +3,22 @@ package MIME::Signature;
 use 5.014;
 use warnings;
 
+use base 'Exporter';
+
 our $VERSION = '0.16';
 
 use Carp qw(croak);
 use Encode qw(decode encode encode_utf8);
 use MIME::Parser;
+
+our @EXPORT    = ();
+our @EXPORT_OK = (
+  qw(
+    &_decoded_body
+    &_replace_body
+    )
+);
+our %EXPORT_TAGS = ();
 
 sub _decoded_body {
     my $entity = shift;

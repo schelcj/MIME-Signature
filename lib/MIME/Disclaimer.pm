@@ -3,11 +3,12 @@ package MIME::Disclaimer;
 use 5.014;
 use strict;
 use warnings;
-use parent 'MIME::Signature';
+use parent -norequire, 'MIME::Signature';
+
+use MIME::Signature qw(_decoded_body _replace_body);
+use Class::Method::Modifiers;
 
 our $VERSION = '0.16';
-
-use Class::Method::Modifiers;
 
 use constant NEWLINE         => "\n";
 use constant LINEBREAK       => '<br />';
@@ -31,7 +32,7 @@ around 'handler_text_enriched' => sub {
 
   $orig->($self, $entity);
 
-  _replace_body($entity, $self->_disclaimer('enriched') . $self->_decoded_body($entity));
+  _replace_body($entity, $self->_disclaimer('enriched') . _decoded_body($entity));
 };
 
 around 'handler_text_html' => sub {
@@ -49,7 +50,7 @@ around 'handler_text_plain' => sub {
 
   $orig->($self, $entity);
 
-  _replace_body($entity, $self->_disclaimer('plain') . $self->_decoded_body($entity));
+  _replace_body($entity, $self->_disclaimer('plain') . _decoded_body($entity));
 };
 
 sub _disclaimer {
