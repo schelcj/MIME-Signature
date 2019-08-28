@@ -10,6 +10,7 @@ use Class::Method::Modifiers;
 
 our $VERSION = '0.16';
 
+use constant EMPTY           => '';
 use constant NEWLINE         => "\n";
 use constant LINEBREAK       => '<br />';
 use constant HORIZONTAL_RULE => '<hr />';
@@ -41,6 +42,23 @@ around 'handler_text_html' => sub {
   my $entity = shift;
 
   $orig->($self, $entity);
+
+  my $body = _decoded_body($entity);
+  require HTML::Parser;
+  my $new_body;
+  my $parser = HTML::Parser->new(
+    start_h => [
+      sub {
+        my ($text, $tagname) = @_;
+        $new_body .= $text;
+        $new_body .= $self->_disclaimer('html') if lc $tagname eq 'body';
+      },
+      'text,tagname'
+    ],
+    default_h => [sub {$new_body .= shift}, 'text'],
+  );
+  $parser->parse($body);
+  _replace_body($entity, $new_body);
 };
 
 around 'handler_text_plain' => sub {
@@ -60,7 +78,7 @@ sub _disclaimer {
   my $delimiter_method = $type . '_delimiter';
   my $delimiter        = $self->$delimiter_method;
 
-  return join(NEWLINE, ($delimiter, $signature, $delimiter));
+  return join(EMPTY, ($delimiter, $signature, $delimiter));
 }
 
 sub add {
