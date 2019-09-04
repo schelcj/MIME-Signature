@@ -16,12 +16,17 @@ use constant LINEBREAK       => '<br />';
 use constant HORIZONTAL_RULE => '<hr />';
 
 around 'new' => sub {
-  my $orig = shift;
-  my $self = $orig->(@_);
+  my $orig  = shift;
+  my $class = shift;
+  my %args  = @_;
+  my $self  = $class->$orig(%args);
 
-  $self->enriched_delimiter(NEWLINE);
-  $self->html_delimiter(LINEBREAK . HORIZONTAL_RULE);
-  $self->plain_delimiter(NEWLINE);
+  for (qw(plain_delimiter html_delimiter enriched_delimiter)) {
+    unless (exists $args{$_}) {
+      my $delimiter = ($_ eq 'html_delimiter') ? LINEBREAK . HORIZONTAL_RULE : NEWLINE;
+      $self->$_($delimiter);
+    }
+  }
 
   return $self;
 };
@@ -107,6 +112,22 @@ email message. It is a subclass of L<MIME::Signature>.
 =head1 METHODS
 
 =over 4
+
+=item C<new>
+
+Constructs a L<MIME::Disclaimer> object with the same arguments as L<MIME::Signature>
+with the exception that delimiters are overwritten if not passed. The delimiters
+are changed to the following:
+
+=over 4
+
+=item plain_delimiter: C<\n>
+
+=item enriched_delimiter: C<\n>
+
+=item html_delimiter: C<< <br /><hr /> >>
+
+=back
 
 =item C<add>
 
