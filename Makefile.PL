@@ -23,10 +23,11 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => '0',
     },
     PREREQ_PM => {
-        'HTML::Entities' => 0,
-        'HTML::Parser'   => 0,
-        'MIME::Parser'   => 0,
-        'Path::Tiny'     => 0,
+        'HTML::Entities'           => 0,
+        'HTML::Parser'             => 0,
+        'MIME::Parser'             => 0,
+        'Path::Tiny'               => 0,
+        'Class::Method::Modifiers' => 0,
     },
     TEST_REQUIRES => {
         'Test::More' => 0,
